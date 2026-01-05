@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Marks - SE-DBMS{% endblock %}
+
+{% block content %}
+{% if session.user.role == 'student' %}
+<!-- Student Access Denied -->
+<div class="alert alert-warning alert-permanent">
+    <h4><i class="bi bi-exclamation-triangle-fill"></i> Access Restricted</h4>
+    <p>Students cannot manage marks. Please use the <strong>"My Report"</strong> section to view your academic records.</p>
+    <a href="{{ url_for('reports') }}" class="btn btn-primary">
+        <i class="bi bi-file-text"></i> Go to My Report
+    </a>
+</div>
+{% else %}
+<!-- Admin & Faculty View -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-pencil-square"></i> Marks Management
+    </h2>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMarksModal">
+        <i class="bi bi-plus-circle"></i> Add Marks
+    </button>
+</div>
+
+<!-- Marks Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>USN</th>
+                        <th>Student Name</th>
+                        <th>Subject</th>
+                        <th>Semester</th>
+                        <th>CIE (50)</th>
+                        <th>SEE (100)</th>
+                        <th>Total (150)</th>
+                        <th>Grade Point</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if marks %}
+                        {% for mark in marks %}
+                        <tr>
+                            <td><strong>{{ mark.usn }}</strong></td>
+                            <td>{{ mark.student_name }}</td>
+                            <td><small>{{ mark.subject_name }}</small></td>
+                            <td>{{ mark.semester }}</td>
+                            <td>
+                                <span class="badge {% if mark.cie_marks >= 40 %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ mark.cie_marks }}/50
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if mark.see_marks >= 80 %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ mark.see_marks }}/100
+                                </span>
+                            </td>
+                            <td><strong>{{ mark.total }}/150</strong></td>
+                            <td>
+                                <span class="badge 
+                                    {% if mark.grade >= 9 %}bg-success
+                                    {% elif mark.grade >= 7 %}bg-primary
+                                    {% elif mark.grade >= 5 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" 
+                                    style="font-size: 16px;">
+                                    {{ mark.grade }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> No marks recorded yet. Click "Add Marks" to begin.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Grading Scale Reference -->
+<div class="card mt-3">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-info-circle"></i> Grading Scale Reference</h6>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-2 mb-2">
+                <span class="badge bg-success w-100 p-2">Grade 10</span>
+                <small class="d-block mt-1">135-150</small>
+            </div>
+            <div class="col-md-2 mb-2">
+                <span class="badge bg-success w-100 p-2">Grade 9</span>
+                <small class="d-block mt-1">120-134</small>
+            </div>
+            <div class="col-md-2 mb-2">
+                <span class="badge bg-primary w-100 p-2">Grade 8</span>
+                <small class="d-block mt-1">105-119</small>
+            </div>
+            <div class="col-md-2 mb-2">
+                <span class="badge bg-primary w-100 p-2">Grade 7</span>
+                <small class="d-block mt-1">90-104</small>
+            </div>
+            <div class="col-md-2 mb-2">
+                <span class="badge bg-warning w-100 p-2">Grade 6</span>
+                <small class="d-block mt-1">75-89</small>
+            </div>
+            <div class="col-md-2 mb-2">
+                <span class="badge bg-warning w-100 p-2">Grade 5</span>
+                <small class="d-block mt-1">60-74</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Marks Modal -->
+<div class="modal fade" id="addMarksModal" tabindex="-1" aria-labelledby="addMarksModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="addMarksModalLabel">
+                    <i class="bi bi-pencil-square"></i> Add/Update Marks
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('marks') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Student *</strong></label>
+                        <select name="usn" class="form-select" required>
+                            <option value="">Select Student</option>
+                            {% for student in students %}
+                            <option value="{{ student.usn }}">{{ student.usn }} - {{ student.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Subject *</strong></label>
+                        <select name="subject_code" class="form-select" required>
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.code }}">{{ subject.code }} - {{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Semester *</strong></label>
+                        <select name="semester" class="form-select" required>
+                            {% for i in range(1, 9) %}
+                            <option value="{{ i }}">Semester {{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>CIE Marks (0-50) *</strong></label>
+                            <input type="number" name="cie" class="form-control" 
+                                   min="0" max="50" placeholder="0-50" required>
+                            <small class="text-muted">Continuous Internal Evaluation</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>SEE Marks (0-100) *</strong></label>
+                            <input type="number" name="see" class="form-control" 
+                                   min="0" max="100" placeholder="0-100" required>
+                            <small class="text-muted">Semester End Examination</small>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mb-0">
+                        <small>
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>Note:</strong> If marks already exist for this student-subject-semester combination, they will be updated.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle"></i> Save Marks
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

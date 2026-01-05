@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SE-DBMS{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        /* Additional inline styles for better appearance */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .navbar {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    {% if session.user %}
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                🎓 SE-DBMS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Dashboard - Available to All -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                            📊 Dashboard
+                        </a>
+                    </li>
+                    
+                    <!-- Students - Only Admin and Faculty -->
+                    {% if session.user.role in ['admin', 'faculty'] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'students' %}active{% endif %}" href="{{ url_for('students') }}">
+                            👥 Students
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Subjects - Only Admin and Faculty -->
+                    {% if session.user.role in ['admin', 'faculty'] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'subjects' %}active{% endif %}" href="{{ url_for('subjects') }}">
+                            📚 Subjects
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Marks - Only Admin and Faculty -->
+                    {% if session.user.role in ['admin', 'faculty'] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'marks' %}active{% endif %}" href="{{ url_for('marks') }}">
+                            📝 Marks
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Reports - Available to All (different views) -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}">
+                            📄 {% if session.user.role == 'student' %}My Report{% else %}Reports{% endif %}
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- User Info and Logout -->
+                <div class="d-flex align-items-center text-white">
+                    <span class="me-3">
+                        <i class="bi bi-person-circle"></i>
+                        <strong>{{ session.user.username }}</strong>
+                        <span class="role-badge">{{ session.user.role }}</span>
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content Container -->
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {% if category == 'success' %}
+                    <i class="bi bi-check-circle-fill"></i>
+                    {% elif category == 'danger' %}
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    {% elif category == 'warning' %}
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    {% elif category == 'info' %}
+                    <i class="bi bi-info-circle-fill"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer (Optional) -->
+    {% if session.user %}
+    <footer class="text-center text-white mt-5 pb-3">
+        <div class="container">
+            <p class="mb-0" style="font-size: 14px;">
+                SE-DBMS v1.0 | Student Efficient Database Management System
+            </p>
+            <p style="font-size: 12px; opacity: 0.8;">
+                Logged in as: <strong>{{ session.user.username }}</strong> ({{ session.user.role }})
+            </p>
+        </div>
+    </footer>
+    {% endif %}
+
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+
+        // Add active class to current nav item
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(function(link) {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+
+        // Confirm before logout
+        document.querySelector('a[href*="logout"]')?.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to logout?')) {
+                e.preventDefault();
+            }
+        });
+
+        // Print functionality for reports page
+        function printReport() {
+            window.print();
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

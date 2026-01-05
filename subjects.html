@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Subjects - SE-DBMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-book-fill"></i> Subjects Management
+    </h2>
+    <div>
+        <select class="form-select d-inline-block w-auto me-2" 
+                onchange="location.href='?semester=' + this.value">
+            <option value="">All Semesters</option>
+            {% for i in range(1, 9) %}
+            <option value="{{ i }}" {% if selected_semester == i|string %}selected{% endif %}>
+                Semester {{ i }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if session.user.role == 'admin' %}
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+            <i class="bi bi-plus-circle"></i> Add Subject
+        </button>
+        {% else %}
+        <span class="badge bg-warning text-dark">View Only Mode</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Subjects Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Credits</th>
+                        <th>Semester</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr>
+                        <td><strong class="text-primary">{{ subject.code }}</strong></td>
+                        <td>{{ subject.name }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ subject.credits }} Credits</span>
+                        </td>
+                        <td>Semester {{ subject.semester }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ subject.subject_type }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Subject Modal (Admin Only) -->
+{% if session.user.role == 'admin' %}
+<div class="modal fade" id="addSubjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-book"></i> Add New Subject</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Subject Code *</strong></label>
+                        <input type="text" name="code" class="form-control" 
+                               placeholder="e.g., CS601" required>
+                        <small class="text-muted">Unique subject identifier</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Subject Name *</strong></label>
+                        <input type="text" name="name" class="form-control" 
+                               placeholder="e.g., Database Management Systems" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Credits *</strong></label>
+                            <input type="number" name="credits" class="form-control" 
+                                   min="1" max="6" value="4" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Semester *</strong></label>
+                            <select name="semester" class="form-select" required>
+                                {% for i in range(1, 9) %}
+                                <option value="{{ i }}">Semester {{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Subject Type</strong></label>
+                        <select name="type" class="form-select">
+                            <option value="Theory">Theory</option>
+                            <option value="Lab">Laboratory</option>
+                            <option value="Project">Project</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Add Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

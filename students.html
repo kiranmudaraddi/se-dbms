@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Students - SE-DBMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-people-fill"></i> Students Management
+    </h2>
+    {% if session.user.role == 'admin' %}
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+        <i class="bi bi-person-plus-fill"></i> Add Student
+    </button>
+    {% else %}
+    <span class="badge bg-warning text-dark">View Only Mode</span>
+    {% endif %}
+</div>
+
+<!-- Students Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>USN</th>
+                        <th>Name</th>
+                        <th>Branch</th>
+                        <th>Year</th>
+                        <th>Semester</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>CGPA</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if students %}
+                        {% for student in students %}
+                        <tr>
+                            <td><strong class="text-primary">{{ student.usn }}</strong></td>
+                            <td>{{ student.name }}</td>
+                            <td><span class="badge bg-secondary">{{ student.branch }}</span></td>
+                            <td>{{ student.admission_year }}</td>
+                            <td>{{ student.current_semester }}</td>
+                            <td><small>{{ student.email }}</small></td>
+                            <td><small>{{ student.phone }}</small></td>
+                            <td><strong class="text-success" style="font-size: 16px;">{{ student.cgpa }}</strong></td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <!-- View Report Button (All Roles) -->
+                                    <a href="{{ url_for('reports') }}?usn={{ student.usn }}" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Report">
+                                        <i class="bi bi-file-text"></i>
+                                    </a>
+                                    
+                                    <!-- Delete Button (Admin Only) -->
+                                    {% if session.user.role == 'admin' %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            onclick="confirmDelete('{{ student.usn }}', '{{ student.name }}')"
+                                            title="Delete Student">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                                <p class="mt-2">No students found. Click "Add Student" to begin.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Student Modal (Admin Only) -->
+{% if session.user.role == 'admin' %}
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Add New Student</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>USN *</strong></label>
+                        <input type="text" name="usn" class="form-control" placeholder="e.g., 1CR24CS001" required>
+                        <small class="text-muted">University Seat Number</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Name *</strong></label>
+                        <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Branch *</strong></label>
+                        <select name="branch" class="form-select" required>
+                            <option value="">Select Branch</option>
+                            <option value="CSE">Computer Science Engineering</option>
+                            <option value="ECE">Electronics & Communication</option>
+                            <option value="ME">Mechanical Engineering</option>
+                            <option value="EEE">Electrical & Electronics</option>
+                            <option value="CE">Civil Engineering</option>
+                            <option value="ISE">Information Science</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Admission Year *</strong></label>
+                            <input type="number" name="year" class="form-control" min="2000" max="2030" 
+                                   value="2024" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Current Semester *</strong></label>
+                            <select name="semester" class="form-select" required>
+                                {% for i in range(1, 9) %}
+                                <option value="{{ i }}">Semester {{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Email</strong></label>
+                        <input type="email" name="email" class="form-control" placeholder="student@college.edu">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Phone</strong></label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+91-9876543210">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Add Student
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Form (Hidden) -->
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="_method" value="DELETE">
+</form>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to delete this student?</p>
+                <div class="alert alert-warning">
+                    <strong>⚠️ Warning:</strong> This action cannot be undone!
+                    <ul class="mb-0 mt-2">
+                        <li>Student record will be permanently deleted</li>
+                        <li>All marks associated with this student will be deleted</li>
+                    </ul>
+                </div>
+                <div class="p-3 bg-light rounded">
+                    <p class="mb-1"><strong>USN:</strong> <span id="deleteUSN"></span></p>
+                    <p class="mb-0"><strong>Name:</strong> <span id="deleteName"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="executeDelete()">
+                    <i class="bi bi-trash"></i> Yes, Delete Student
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    let deleteUSNValue = '';
+    
+    // Show delete confirmation modal
+    function confirmDelete(usn, name) {
+        deleteUSNValue = usn;
+        document.getElementById('deleteUSN').textContent = usn;
+        document.getElementById('deleteName').textContent = name;
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        modal.show();
+    }
+    
+    // Execute delete
+    function executeDelete() {
+        if (deleteUSNValue) {
+            const form = document.getElementById('deleteForm');
+            form.action = '/students/delete/' + deleteUSNValue;
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}

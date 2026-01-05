@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - SE-DBMS{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="bi bi-file-earmark-text-fill"></i> 
+    {% if session.user.role == 'student' %}
+    My Academic Report
+    {% else %}
+    Academic Reports
+    {% endif %}
+</h2>
+
+<!-- Student Selection -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <label class="form-label"><strong>
+                    {% if session.user.role == 'student' %}
+                    Your Profile
+                    {% else %}
+                    Select Student
+                    {% endif %}
+                </strong></label>
+                <select class="form-select form-select-lg" onchange="location.href='?usn=' + this.value">
+                    <option value="">Choose a student...</option>
+                    {% for s in students %}
+                    <option value="{{ s.usn }}" {% if selected_usn == s.usn %}selected{% endif %}>
+                        {{ s.usn }} - {{ s.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Display -->
+{% if student %}
+<div class="card shadow">
+    <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <h4 class="mb-0">
+            <i class="bi bi-file-person"></i> Academic Transcript
+        </h4>
+    </div>
+    <div class="card-body">
+        <!-- Student Information -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>USN:</strong></td>
+                        <td>{{ student.usn }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Name:</strong></td>
+                        <td>{{ student.name }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Branch:</strong></td>
+                        <td><span class="badge bg-secondary">{{ student.branch }}</span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Admission Year:</strong></td>
+                        <td>{{ student.admission_year }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Current Semester:</strong></td>
+                        <td>{{ student.current_semester }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email:</strong></td>
+                        <td><small>{{ student.email }}</small></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Academic Records - Semester-wise -->
+        <h5 class="mb-3"><i class="bi bi-journal-text"></i> Academic Records</h5>
+        
+        {% if marks %}
+            {% for sem in semester_data|sort %}
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><strong>Semester {{ sem }}</strong></span>
+                    <span class="badge bg-light text-dark">
+                        SGPA: <strong>{{ semester_sgpa[sem] }}</strong>
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th>Credits</th>
+                                    <th>CIE</th>
+                                    <th>SEE</th>
+                                    <th>Total</th>
+                                    <th>Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mark in semester_data[sem] %}
+                                <tr>
+                                    <td><strong>{{ mark.subject_code }}</strong></td>
+                                    <td>{{ mark.subject_name }}</td>
+                                    <td>{{ mark.credits }}</td>
+                                    <td>{{ mark.cie_marks }}/50</td>
+                                    <td>{{ mark.see_marks }}/100</td>
+                                    <td><strong>{{ mark.total }}/150</strong></td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if mark.grade >= 9 %}bg-success
+                                            {% elif mark.grade >= 7 %}bg-primary
+                                            {% elif mark.grade >= 5 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            style="font-size: 16px;">
+                                            {{ mark.grade }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-circle"></i> No marks recorded for this student yet.
+        </div>
+        {% endif %}
+
+        <!-- CGPA Display -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="text-center p-4 rounded" 
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="mb-2" style="opacity: 0.9;">Cumulative Grade Point Average</h5>
+                    <h1 class="display-1 fw-bold mb-0">{{ cgpa }}</h1>
+                    <small style="opacity: 0.8;">Out of 10.00</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- CGPA Calculation Breakdown -->
+        {% if marks %}
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-calculator"></i> CGPA Calculation</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Formula:</strong> CGPA = Total Credit Points ÷ Total Credits</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Semester</th>
+                                <th>SGPA</th>
+                                <th>Subjects</th>
+                                <th>Total Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sem in semester_data|sort %}
+                            <tr>
+                                <td><strong>Semester {{ sem }}</strong></td>
+                                <td><span class="badge bg-primary">{{ semester_sgpa[sem] }}</span></td>
+                                <td>{{ semester_data[sem]|length }}</td>
+                                <td>{{ semester_data[sem]|sum(attribute='credits') }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-secondary">
+                                <td colspan="2"><strong>Overall CGPA</strong></td>
+                                <td colspan="2"><strong class="text-primary" style="font-size: 18px;">{{ cgpa }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+            {% if session.user.role in ['admin', 'faculty'] %}
+            <a href="{{ url_for('marks') }}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Manage Marks
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Please select a student to view their academic report.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .navbar, .btn, .form-select, .card-header { 
+                display: none !important; 
+            }
+            body { 
+                background: white !important; 
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

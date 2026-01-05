@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SE-DBMS{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h2>
+        <i class="bi bi-speedometer2"></i> Dashboard
+        {% if session.user.role == 'admin' %}
+        <span class="badge bg-danger">Administrator View</span>
+        {% elif session.user.role == 'faculty' %}
+        <span class="badge bg-success">Faculty View</span>
+        {% else %}
+        <span class="badge bg-info">Student View</span>
+        {% endif %}
+    </h2>
+    <p class="text-muted">Welcome back, <strong>{{ session.user.username }}</strong>!</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    {% if session.user.role in ['admin', 'faculty'] %}
+    <!-- Total Students Card -->
+    <div class="col-md-4 mb-3">
+        <div class="card text-white h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2" style="opacity: 0.9;">Total Students</h6>
+                        <h2 class="mb-0"><strong>{{ total_students }}</strong></h2>
+                    </div>
+                    <div style="font-size: 48px; opacity: 0.3;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Subjects Card -->
+    <div class="col-md-4 mb-3">
+        <div class="card text-white h-100" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2" style="opacity: 0.9;">Total Subjects</h6>
+                        <h2 class="mb-0"><strong>{{ total_subjects }}</strong></h2>
+                    </div>
+                    <div style="font-size: 48px; opacity: 0.3;">
+                        <i class="bi bi-book-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Average CGPA Card -->
+    <div class="col-md-4 mb-3">
+        <div class="card text-white h-100" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2" style="opacity: 0.9;">Average CGPA</h6>
+                        <h2 class="mb-0"><strong>{{ avg_cgpa }}</strong></h2>
+                    </div>
+                    <div style="font-size: 48px; opacity: 0.3;">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Student Personal Stats -->
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <h5><i class="bi bi-info-circle-fill"></i> Welcome, Student!</h5>
+            <p class="mb-0">Use the <strong>"My Report"</strong> section to view your academic records and CGPA.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Students Table (Admin & Faculty Only) -->
+{% if session.user.role in ['admin', 'faculty'] %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Students</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>USN</th>
+                        <th>Name</th>
+                        <th>Branch</th>
+                        <th>Semester</th>
+                        <th>CGPA</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in recent_students %}
+                    <tr>
+                        <td><strong>{{ student.usn }}</strong></td>
+                        <td>{{ student.name }}</td>
+                        <td><span class="badge bg-secondary">{{ student.branch }}</span></td>
+                        <td>{{ student.current_semester }}</td>
+                        <td>
+                            <strong class="text-primary" style="font-size: 18px;">{{ student.cgpa }}</strong>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('reports') }}?usn={{ student.usn }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-text"></i> View Report
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions (Role-based) -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if session.user.role == 'admin' %}
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('students') }}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-person-plus-fill"></i><br>Add Student
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('subjects') }}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-book"></i><br>Add Subject
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('marks') }}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-pencil-square"></i><br>Add Marks
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-file-earmark-text"></i><br>Generate Report
+                        </a>
+                    </div>
+                    {% elif session.user.role == 'faculty' %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('students') }}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-people"></i><br>View Students
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('marks') }}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-pencil-square"></i><br>Manage Marks
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-file-earmark-text"></i><br>View Reports
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-primary w-100 btn-lg">
+                            <i class="bi bi-file-person"></i><br>View My Report
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-success w-100 btn-lg">
+                            <i class="bi bi-graph-up"></i><br>Check My CGPA
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
