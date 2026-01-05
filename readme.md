@@ -140,12 +140,11 @@ Contributions are welcome! Feel free to:
 ## 📄 License
 
 This project is open source and available under the MIT License.
-
 ## 👨‍💻 Author
 
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+**Kiran Mudaraddi**
+- GitHub: [@kiranmudaraddi](https://github.com/kiranmudaraddi)
+- Email: kiran.mudaraddi@gmail.com
 
 ## 🙏 Acknowledgments
 
